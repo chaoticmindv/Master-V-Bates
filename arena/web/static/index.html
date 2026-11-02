@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena.ai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=ui-redesign-models-1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark-dimmed.min.css">
+</head>
+<body>
+  <div class="boot-splash" id="bootSplash"><div class="boot-logo">Arena</div><div class="spinner"></div><div class="boot-text">Starting Arena Desktop...</div></div>
+  <!-- Custom title bar (the desktop window is frameless) -->
+  <div class="titlebar" id="titlebar">
+    <div class="tb-hit pywebview-drag-region" id="tbDrag" title="Drag to move the window"></div>
+    <div class="titlebar-controls">
+      <button class="tb-btn" onclick="tbMinimize()" title="Minimize">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="6" x2="10" y2="6"/></svg>
+      </button>
+      <button class="tb-btn" id="tbMaxBtn" onclick="tbToggleMaximize()" title="Maximize">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg>
+      </button>
+      <button class="tb-btn close" onclick="tbClose()" title="Close">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2.5" y1="2.5" x2="9.5" y2="9.5"/><line x1="9.5" y1="2.5" x2="2.5" y2="9.5"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="app">
+    <button class="pane-close" onclick="closeArenaPane()" title="Close the arena.ai pane">arena.ai <span>&times;</span></button>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand pywebview-drag-region">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 9h.01M15 9h.01M9 13h.01M15 13h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Arena</span>
+        </div>
+        <button class="icon-btn" onclick="toggleSidebar()" title="Collapse sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item new-chat" onclick="newChat()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          New Chat
+        </button>
+        <button class="nav-item" onclick="window.open('https://arena.ai/leaderboard','_blank')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Leaderboard
+        </button>
+        <button class="nav-item" onclick="searchChats()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+      </nav>
+
+      <!-- Chat folders -->
+      <div class="sidebar-folders">
+        <div class="folder-header" onclick="toggleFolder('starred')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span>Starred</span>
+        </div>
+        <div class="folder-items" id="starredChats"></div>
+      </div>
+
+      <div class="sidebar-history" id="chatHistory"></div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-actions">
+          <button class="icon-btn" onclick="toggleArenaPane()" title="arena.ai pane (sign-in and human checks)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </button>
+          <button class="icon-btn" onclick="toggleIDE()" title="File Explorer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="icon-btn feature-disabled" title="Terminal (disabled — security)" style="opacity:.35;cursor:not-allowed" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </button>
+          <button class="icon-btn" onclick="showSettings()" title="Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </button>
+        </div>
+        <div class="sidebar-user-wrap">
+          <div class="sidebar-user" id="userSection" onclick="toggleAccountMenu(event)">
+            <div class="user-avatar" id="userAvatar">?</div>
+            <span class="user-email" id="userEmail">Log in</span>
+            <svg class="account-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="account-menu" id="accountMenu">
+            <div class="account-menu-head">Accounts</div>
+            <div class="account-list" id="accountList"></div>
+            <button class="account-action" onclick="showLogin(true)">+ Add account</button>
+            <button class="account-action danger" id="accountLogoutBtn" onclick="logout()" style="display:none">Sign out</button>
+          </div>
+        </div>
+        <div class="sidebar-links">
+          <a href="https://arena.ai/terms" target="_blank">Terms</a>
+          <span>&middot;</span>
+          <a href="https://arena.ai/privacy" target="_blank">Privacy</a>
+          <span>&middot;</span>
+          <a href="https://arena.ai/cookies" target="_blank">Cookies</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="main-wrapper">
+      <main class="main">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Open sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        </button>
+
+        <!-- Welcome -->
+        <div class="welcome" id="welcome">
+          <svg class="welcome-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 9h.01M15 9h.01M9 13h.01M15 13h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h1>Experience the <span class="hl">frontier</span></h1>
+          <p>Chat with 400+ AI models for free. Battle mode picks two random models &mdash; you vote on the best. Direct mode lets you choose.</p>
+          <div class="suggestions">
+            <button class="sug-card" onclick="useSuggestion('Create a landing page')">
+              <svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <div class="sc-title">Create a landing page</div>
+              <div class="sc-desc">Create a sleek, modern landing...</div>
+            </button>
+            <button class="sug-card" onclick="useSuggestion('Build a dashboard with interactive charts')">
+              <svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <div class="sc-title">Build a dashboard</div>
+              <div class="sc-desc">Turn data into interactive charts</div>
+            </button>
+            <button class="sug-card" onclick="useSuggestion('Make a playable browser game')">
+              <svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></svg>
+              <div class="sc-title">Make a game</div>
+              <div class="sc-desc">Build a playable browser game</div>
+            </button>
+            <button class="sug-card" onclick="useSuggestion('Help me debug a Python error')">
+              <svg class="sc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+              <div class="sc-title">Debug code</div>
+              <div class="sc-desc">Fix a Python error</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages" id="messages"></div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settingsPanel" style="display:none">
+          <div class="settings-head">
+            <h2>Settings</h2>
+            <button class="icon-btn" onclick="closeSettings()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="settings-body">
+            <!-- Account -->
+            <section class="settings-section">
+              <h3>Account</h3>
+              <div class="settings-row">
+                <div class="settings-label">Status</div>
+                <div class="settings-value" id="settingsAuthStatus">Not logged in</div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-label">Email</div>
+                <div class="settings-value" id="settingsEmail">&mdash;</div>
+              </div>
+              <div class="settings-row">
+                <button class="btn btn-secondary btn-sm" id="settingsLoginBtn" onclick="showLogin(false); closeSettings()">Log in</button>
+                <button class="btn btn-secondary btn-sm" onclick="showLogin(true); closeSettings()">Add account</button>
+                <button class="btn btn-danger btn-sm" id="settingsLogoutBtn" onclick="logout()" style="display:none">Sign out</button>
+              </div>
+            </section>
+
+            <!-- General -->
+            <section class="settings-section">
+              <h3>Appearance</h3>
+              <div class="settings-row">
+                <div class="settings-label">Theme</div>
+                <select class="settings-select" id="settingsTheme" onchange="saveSetting('theme', this.value)">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="system">System</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- Chat -->
+            <section class="settings-section">
+              <h3>Chat</h3>
+              <div class="settings-row">
+                <div class="settings-label">Default mode</div>
+                <select class="settings-select" id="settingsMode" onchange="selectMode(this.value)">
+                  <option value="battle">Battle</option>
+                  <option value="agent">Agent</option>
+                  <option value="side-by-side">Side by Side</option>
+                  <option value="direct">Direct</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <div class="settings-label">Default modality</div>
+                <select class="settings-select" id="settingsModality" onchange="selectModality(this.value)">
+                  <option value="auto">Auto</option>
+                  <option value="text">Text</option>
+                  <option value="code">Code</option>
+                  <option value="search">Web Search</option>
+                  <option value="image">Image</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- About -->
+            <section class="settings-section">
+              <h3>About</h3>
+              <div class="settings-row">
+                <div class="settings-label">Version</div>
+                <div class="settings-value">1.1.0</div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-label">Arena.ai</div>
+                <a href="https://arena.ai" target="_blank" class="settings-link">arena.ai</a>
+              </div>
+              <div class="settings-row muted">
+                Unofficial desktop client. Not affiliated with Arena.ai.
+              </div>
+            </section>
+
+            <!-- Permissions -->
+            <section class="settings-section">
+              <h3>Permissions</h3>
+              <div class="settings-row">
+                <span>Local files and commands</span>
+                <select id="settingsPerm" class="settings-select" onchange="setPerm(this.value)">
+                  <option value="default">Ask before edits</option>
+                  <option value="acceptEdits">Accept edits</option>
+                  <option value="auto">Auto</option>
+                  <option value="plan">Plan mode</option>
+                  <option value="bypassPermissions">Bypass permissions</option>
+                </select>
+              </div>
+              <p class="settings-note">Shift+Tab in the message box cycles the modes. "Always allow" answers last until the app restarts.</p>
+            </section>
+            <!-- Diagnostics -->
+            <section class="settings-section">
+              <h3>Diagnostics and help</h3>
+              <div class="settings-row">
+                <button class="btn btn-secondary btn-sm" onclick="runDoctor()">Run checks</button>
+                <button class="btn btn-secondary btn-sm" onclick="showEngine()">Show arena.ai window</button>
+                <button class="btn btn-secondary btn-sm" onclick="showHelp()">Commands and shortcuts (F1)</button>
+              </div>
+              <div id="doctorOut"></div>
+            </section>
+            <!-- Data -->
+            <section class="settings-section">
+              <h3>Data</h3>
+              <div class="settings-row">
+                <button class="btn btn-danger btn-sm" onclick="clearAllChats()">Clear all chats</button>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+          <!-- Image upload preview -->
+          <div class="upload-preview" id="uploadPreview"></div>
+          <div class="input-container">
+            <!-- Row 1: the two headline modes as a segmented toggle -->
+            <div class="input-row">
+              <div class="seg-toggle" id="modeToggle" role="tablist" aria-label="Chat mode">
+                <button class="seg-btn" id="segBattle" data-mode="battle" role="tab" onclick="selectMode('battle')" title="Two random models answer; you pick the better one">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 2.5L23 7l-5.5 4.5"/><path d="M6.5 2.5L1 7l5.5 4.5"/><path d="M14 2l-4 20"/><path d="M20.5 7l-3.2 3.2"/><path d="M3.5 7l3.2 3.2"/></svg>
+                  <span>Battle</span>
+                </button>
+                <button class="seg-btn" id="segDirect" data-mode="direct" role="tab" onclick="selectMode('direct')" title="Pick one model and chat with it">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>Direct</span>
+                </button>
+              </div>
+              <div class="dropdown" id="modeDropdown">
+                <button class="sel-btn mode-more" id="modeBtn" onclick="toggleDD('modeMenu')" title="Agent and side-by-side modes">
+                  <span id="modeBtnText">More</span>
+                  <svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu" id="modeMenu">
+                  <div class="dd-items">
+                    <div class="dd-item" data-mode="battle" onclick="selectMode('battle')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 2.5L23 7l-5.5 4.5"/><path d="M6.5 2.5L1 7l5.5 4.5"/><path d="M14 2l-4 20"/></svg>
+                      <div>
+                        <div class="dd-label">Battle</div>
+                        <div class="dd-desc">Battle 2 anonymous models</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-mode="direct" onclick="selectMode('direct')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <div>
+                        <div class="dd-label">Direct</div>
+                        <div class="dd-desc">Chat with 1 model at a time</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-mode="agent" onclick="selectMode('agent')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="8" y="8" width="8" height="8" rx="1"/><path d="M12 16v4h4"/><path d="M4 12H2"/><path d="M22 12h-2"/></svg>
+                      <div>
+                        <div class="dd-label">Agent Mode</div>
+                        <div class="dd-desc">One model + local file tools</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-mode="side-by-side" onclick="selectMode('side-by-side')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+                      <div>
+                        <div class="dd-label">Side by Side</div>
+                        <div class="dd-desc">Compare 2 models of your choice</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="spacer"></div>
+            </div>
+
+            <div class="input-top">
+              <div class="slash-menu" id="slashMenu"></div>
+              <textarea id="chatInput" placeholder="Ask anything, or type / for commands" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this); updateSendBtn(); slashIdx = 0; updateSlash()"></textarea>
+            </div>
+            <div class="input-bottom">
+              <button class="attach-btn" onclick="openFileUpload()" title="Add files">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.txt,.md,.csv,.json,.py,.js,.ts,.tsx,.html,.css,.xml,.yaml,.yml,.zip" style="display:none" onchange="handleFileUpload(event)">
+              <button class="sel-btn ws-chip" id="wsChip" onclick="chooseWorkspace()" title="Pick a project folder for Agent mode">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                <span id="wsChipName">Pick folder</span>
+              </button>
+
+              <span class="chip-div" aria-hidden="true"></span>
+
+              <div class="dropdown" id="modalityDropdown">
+                <button class="sel-btn" id="modalityBtn" onclick="toggleDD('modalityMenu')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 6.26L20 10l-4.91 3.74L16.18 20 12 16.27 7.82 20l1.09-6.26L4 10l5.91-1.74L12 2z"/></svg>
+                  <span id="modalityBtnText">Auto</span>
+                  <svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu" id="modalityMenu">
+                  <div class="dd-items">
+                    <div class="dd-item sel" data-modality="auto" onclick="selectModality('auto')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 6.26L20 10l-4.91 3.74L16.18 20 12 16.27 7.82 20l1.09-6.26L4 10l5.91-1.74L12 2z"/></svg>
+                      <div>
+                        <div class="dd-label">Auto</div>
+                        <div class="dd-desc">Auto-routes to the right modality</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-modality="text" onclick="selectModality('text')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      <div>
+                        <div class="dd-label">Text</div>
+                        <div class="dd-desc">Chat with AI models</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-modality="code" onclick="selectModality('code')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                      <div>
+                        <div class="dd-label">Code</div>
+                        <div class="dd-desc">Generate websites and apps</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-modality="search" onclick="selectModality('search')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      <div>
+                        <div class="dd-label">Web Search</div>
+                        <div class="dd-desc">Search the web</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-modality="image" onclick="selectModality('image')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      <div>
+                        <div class="dd-label">Image</div>
+                        <div class="dd-desc">Generate and edit images</div>
+                      </div>
+                    </div>
+                    <div class="dd-item" data-modality="video" onclick="selectModality('video')">
+                      <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>
+                      <div>
+                        <div class="dd-label">Video</div>
+                        <div class="dd-desc">Generate and edit videos</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dropdown" id="modelDropdown" style="display:none">
+                <button class="sel-btn" id="modelBtn" onclick="toggleDD('modelMenu')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+                  <span id="modelBtnText">Auto</span>
+                  <svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu" id="modelMenu">
+                  <div class="dd-search">
+                    <input type="text" placeholder="Search models..." id="modelSearch" oninput="filterModels()">
+                    <button class="dd-refresh" onclick="loadModels(true)" title="Refresh models">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    </button>
+                  </div>
+                  <div class="dd-items" id="modelList"></div>
+                </div>
+              </div>
+
+              <div class="dropdown" id="modelDropdownB" style="display:none">
+                <button class="sel-btn" id="modelBtnB" onclick="toggleDD('modelMenuB')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+                  <span id="modelBtnTextB">Model B</span>
+                  <svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu" id="modelMenuB">
+                  <div class="dd-search">
+                    <input type="text" placeholder="Search models..." id="modelSearchB" oninput="filterModelsB()">
+                    <button class="dd-refresh" onclick="loadModels(true)" title="Refresh models">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    </button>
+                  </div>
+                  <div class="dd-items" id="modelListB"></div>
+                </div>
+              </div>
+
+              <div class="adv-wrap">
+                <button class="sel-btn perm-btn" id="permBtn" data-perm="default" onclick="toggleAdv()" title="Advanced: permissions and safety (Shift+Tab)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.5.57.87 1.09.91H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  <span class="adv-badge" id="permLabel" hidden>Ask before edits</span>
+                </button>
+                <div class="adv-menu" id="permMenu">
+                  <div class="adv-title">Permissions</div>
+                  <div class="dd-items">
+                    <div class="dd-item" data-perm="default" onclick="setPerm('default')"><div><div class="dd-label">Ask before edits</div><div class="dd-desc">Approve every change and command</div></div></div>
+                    <div class="dd-item" data-perm="acceptEdits" onclick="setPerm('acceptEdits')"><div><div class="dd-label">Accept edits</div><div class="dd-desc">Files change freely; deletes and commands ask</div></div></div>
+                    <div class="dd-item" data-perm="auto" onclick="setPerm('auto')"><div><div class="dd-label">Auto</div><div class="dd-desc">Free inside the project folder; risky commands ask</div></div></div>
+                    <div class="dd-item" data-perm="plan" onclick="setPerm('plan')"><div><div class="dd-label">Plan mode</div><div class="dd-desc">Read only: look around, then propose a plan</div></div></div>
+                    <div class="dd-item" data-perm="bypassPermissions" onclick="setPerm('bypassPermissions')"><div><div class="dd-label">Bypass permissions</div><div class="dd-desc">Never ask (catastrophic commands stay blocked)</div></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="spacer"></div>
+
+              <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled title="Send message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-footer">Arena Desktop &middot; Unofficial client for arena.ai &middot; <a href="#" onclick="showHelp(); return false">Help (F1)</a></div>
+        </div>
+
+        <!-- Terminal Panel -->
+        <div class="terminal-panel collapsed" id="terminalPanel">
+          <div class="resize-handle-h" id="terminalResize"></div>
+          <div class="terminal-head">
+            <h4>Terminal</h4>
+            <div class="spacer"></div>
+            <button class="icon-btn" onclick="clearTerminal()" title="Clear">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+            </button>
+            <button class="icon-btn" onclick="toggleTerminal()" title="Close">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="terminal-body" id="terminalOutput"></div>
+          <div class="terminal-input">
+            <span class="prompt">$</span>
+            <input type="text" id="terminalInput" placeholder="Type a command..." onkeydown="if(event.key==='Enter')runCommand()">
+          </div>
+        </div>
+      </main>
+
+      <!-- IDE File Panel -->
+      <div class="ide-panel collapsed" id="idePanel">
+        <div class="ide-panel-head">
+          <h3>Explorer</h3>
+          <div class="ide-panel-actions">
+            <button class="icon-btn" onclick="ideNewFile()" title="New File">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            </button>
+            <button class="icon-btn" onclick="ideNewFolder()" title="New Folder">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+            </button>
+            <button class="icon-btn" onclick="ideRefresh()" title="Refresh">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <button class="icon-btn" onclick="toggleIDE()" title="Close">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="file-tree" id="fileTree"></div>
+        <div class="ide-statusbar">
+          <span id="ideFileCount">0 files</span>
+          <div class="spacer"></div>
+          <span id="ideCwd">~</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="loginTitle">Sign in to arena.ai</h2>
+        <button class="icon-btn" onclick="closeLogin()" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <button class="btn btn-primary" id="windowLoginBtn" onclick="windowLogin()">Sign in with the arena.ai window</button>
+        <p class="login-note" id="windowLoginNote" style="display:none">The sign-in window is part of the desktop app (arena-ai.exe). Here, use the steps below.</p>
+        <p class="login-note" id="windowLoginIntro">Opens arena.ai inside the app. Sign in with Google or email; the app picks up the session by itself.</p>
+        <p class="login-note" id="addAccountNote" style="display:none">The arena.ai pane is using your current account. Sign in to the other account in Chrome, Edge or Brave, then press <b>Paste from clipboard</b> below (or use <b>More options</b> to find it automatically).</p>
+        <div class="divider">or copy the session from your browser</div>
+        <ol class="login-steps-list">
+          <li>Open <a href="https://arena.ai" target="_blank" rel="noopener">arena.ai</a> in Chrome, Edge or Brave and sign in.</li>
+          <li>Press <kbd>F12</kbd> and open the <b>Console</b> tab.</li>
+          <li>Type <code class="snippet">copy(document.cookie)</code> <button class="btn btn-secondary btn-xs" onclick="copySnippet(this)">Copy</button> and press <kbd>Enter</kbd>.<br><small>If the console blocks pasting, type <code>allow pasting</code> first.</small></li>
+          <li>Come back here and press <b>Paste from clipboard</b>.</li>
+        </ol>
+        <button class="btn btn-secondary" onclick="clipboardLogin()">Paste from clipboard</button>
+        <details class="login-more">
+          <summary>More options</summary>
+          <button class="btn btn-secondary btn-sm" id="autoLoginBtn" onclick="autoLogin()">Find the session in my browser</button>
+          <textarea class="cookie-input" id="cookieInput" placeholder="Or paste the cookie text here..."></textarea>
+          <button class="btn btn-secondary btn-sm" onclick="manualLogin()">Sign in with pasted text</button>
+        </details>
+        <div id="loginStatus"></div>
+        <p class="login-note">The session stays on this computer (in ~/.arena-cli). Signing out of arena.ai ends it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="helpModal" onclick="if (event.target === this) closeHelp()">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Help</h2>
+        <button class="icon-btn" onclick="closeHelp()" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="helpBody"></div>
+    </div>
+  </div>
+  <div class="toasts" id="toasts"></div>
+
+  <!-- Chat history more-options menu (rename / pin / delete) -->
+  <div class="h-menu" id="chatMenu">
+    <button data-act="rename" onclick="chatMenuAction('rename')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      <span>Rename</span>
+    </button>
+    <button data-act="pin" onclick="chatMenuAction('pin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4.8l2 2.2v2H7v-2z"/></svg>
+      <span>Pin</span>
+    </button>
+    <button data-act="delete" class="danger" onclick="chatMenuAction('delete')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span>Delete</span>
+    </button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.4/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="/static/app.js?v=ui-redesign-models-1"></script>
+</body>
+</html>

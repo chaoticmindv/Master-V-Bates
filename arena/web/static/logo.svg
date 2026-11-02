@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#299BFF"/>
+      <stop offset="100%" stop-color="#1E7ACC"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="512" height="512" rx="80" fill="#0F172A"/>
+
+  <!-- Main symbol: stylized arena / hexagonal A -->
+  <g transform="translate(256, 210)">
+    <!-- Outer hexagon ring -->
+    <polygon points="0,-120 104,-60 104,60 0,120 -104,60 -104,-60"
+             fill="none" stroke="url(#g1)" stroke-width="6" opacity="0.9"/>
+
+    <!-- Inner A letterform -->
+    <path d="M0,-75 L-50,65 L-30,65 L-18,30 L18,30 L30,65 L50,65 Z"
+          fill="url(#g1)"/>
+    <!-- A crossbar -->
+    <rect x="-14" y="5" width="28" height="10" rx="2" fill="#0F172A"/>
+
+    <!-- Accent dot (terminal cursor) -->
+    <circle cx="0" cy="90" r="6" fill="url(#g2)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="256" y="400" text-anchor="middle"
+        font-family="'Segoe UI', system-ui, -apple-system, sans-serif"
+        font-size="52" font-weight="700" letter-spacing="8" fill="#F5F5F5">ARENA</text>
+
+  <!-- Subtitle -->
+  <text x="256" y="440" text-anchor="middle"
+        font-family="'Segoe UI', system-ui, sans-serif"
+        font-size="16" font-weight="400" letter-spacing="4" fill="#6B7280">CODE</text>
+</svg>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Desktop — OpenAI API Dashboard</title>
+  <link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #1c1c1b;
+      --card-bg: #272623;
+      --surface-raised: #34322e;
+      --surface-border: #44403a;
+      --accent-blue: #299bff;
+      --accent-blue-hover: #1f85e0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f4f0eb;
+      --text-muted: #9e9890;
+      --text-dim: #6d675f;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      font-size: 14px;
+      padding: 32px 24px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* Hero Card (URL + Stats) */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .url-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .url-label {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .url-code {
+      font-family: var(--font-mono);
+      background: #181716;
+      border: 1px solid var(--surface-border);
+      color: var(--accent-blue);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--accent-blue-hover);
+    }
+    .btn-secondary {
+      background: var(--surface-raised);
+      color: var(--text-main);
+      border: 1px solid var(--surface-border);
+    }
+    .btn-secondary:hover {
+      background: #3e3b37;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+    .btn-xs {
+      padding: 4px 10px;
+      font-size: 11.5px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+    }
+    .stat-card {
+      background: #1e1e1d;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+    .stat-lbl {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Logs Table */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .toolbar h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .table-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      padding: 12px 16px;
+      background: #1f1e1d;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--surface-border);
+      color: var(--text-main);
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-err {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .badge-warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Model Catalog */
+    .model-search {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-main);
+      outline: none;
+      margin-bottom: 18px;
+      transition: border-color 0.15s ease;
+    }
+    .model-search:focus {
+      border-color: var(--accent-blue);
+    }
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .model-card {
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .model-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .model-card-title {
+      font-weight: 600;
+      font-size: 13.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .model-card-org {
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #181716;
+      color: var(--text-muted);
+    }
+    .model-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .model-card-id {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Snippets Box */
+    .snippet-card {
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .snippet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #1f1e1d;
+      border-bottom: 1px solid var(--surface-border);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    pre {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2ddd5;
+      background: #181716;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #2f2d29;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--accent-blue);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <h1>Arena Desktop API Monitor</h1>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="serverStatusText">Online</span>
+      </div>
+    </header>
+
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="url-bar">
+        <span class="url-label">OpenAI Base URL:</span>
+        <code class="url-code" id="baseUrlDisplay">http://127.0.0.1:8080/v1</code>
+        <button class="btn btn-primary" onclick="copyText(document.getElementById('baseUrlDisplay').textContent, 'Base URL copied!')">
+          Copy URL
+        </button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-lbl">Total Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statSuccess">100%</div>
+          <div class="stat-lbl">Success Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statLatency">0 ms</div>
+          <div class="stat-lbl">Avg Latency</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statChallenges">0</div>
+          <div class="stat-lbl">Captchas Solved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('logs', this)">Live Request Logs</button>
+      <button class="tab-btn" onclick="switchTab('models', this)">Model Catalog (<span id="modelCountBadge">0</span>)</button>
+      <button class="tab-btn" onclick="switchTab('docs', this)">Setup & Docs</button>
+    </div>
+
+    <!-- Tab 1: Live Logs -->
+    <div class="tab-pane active" id="pane-logs">
+      <div class="toolbar">
+        <h3>Live Call Inspector</h3>
+        <div class="toolbar-actions">
+          <button class="btn btn-secondary btn-xs" onclick="fetchStats()">Refresh</button>
+          <button class="btn btn-danger btn-xs" onclick="clearLogs()">Clear History</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Model</th>
+              <th>Status</th>
+              <th>Latency</th>
+              <th>Mode</th>
+              <th>Est. Tokens</th>
+              <th>Challenge</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody">
+            <tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-dim)">No requests recorded yet. Fire a call from Cursor, Continue, or curl to see it live!</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: Model Catalog -->
+    <div class="tab-pane" id="pane-models">
+      <input type="text" class="model-search" id="modelSearchInput" placeholder="Search 200+ models (e.g. kimi, gemini, argon, gpt)..." oninput="filterModels()">
+      <div class="models-grid" id="modelsGrid"></div>
+    </div>
+
+    <!-- Tab 3: Setup & Docs -->
+    <div class="tab-pane" id="pane-docs">
+      <div class="snippet-card">
+        <div class="snippet-header">
+          <span>Cursor / Continue / LibreChat Setup</span>
+          <button class="btn btn-secondary btn-xs" onclick="copySnippet('cursorSnippet')">Copy</button>
+        </div>
+        <pre><code id="cursorSnippet">Base URL: http://127.0.0.1:8080/v1
+API Key:  arena-local (or any string)
+Model:    gemini-4-argon-high (or kimi-k3, gpt-6-luna-max, etc.)</code></pre>
+      </div>
+
+      <div class="snippet-card">
+        <div class="snippet-header">
+          <span>Python (openai SDK)</span>
+          <button class="btn btn-secondary btn-xs" onclick="copySnippet('pySnippet')">Copy</button>
+        </div>
+        <pre><code id="pySnippet">from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://127.0.0.1:8080/v1",
+    api_key="arena-local",
+)
+
+# Streaming:
+stream = client.chat.completions.create(
+    model="gemini-4-argon-high",
+    messages=[{"role": "user", "content": "Explain relativity in one sentence"}],
+    stream=True,
+)
+for chunk in stream:
+    if chunk.choices and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)</code></pre>
+      </div>
+
+      <div class="snippet-card">
+        <div class="snippet-header">
+          <span>cURL</span>
+          <button class="btn btn-secondary btn-xs" onclick="copySnippet('curlSnippet')">Copy</button>
+        </div>
+        <pre><code id="curlSnippet">curl http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer arena-local" \
+  -d '{
+    "model": "kimi-k3",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
+  }'</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let cachedModels = [];
+
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pane-' + name).classList.add('active');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function copyText(str, successMsg = 'Copied to clipboard!') {
+      navigator.clipboard.writeText(str.trim());
+      showToast(successMsg);
+    }
+
+    function copySnippet(id) {
+      const el = document.getElementById(id);
+      if (el) copyText(el.textContent, 'Code snippet copied!');
+    }
+
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/v1/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        if (data.base_url) {
+          document.getElementById('baseUrlDisplay').textContent = data.base_url;
+          updateDocsSnippets(data.base_url);
+        }
+
+        if (data.stats) {
+          const s = data.stats;
+          document.getElementById('statTotal').textContent = s.total_requests;
+          document.getElementById('statSuccess').textContent = s.success_rate + '%';
+          document.getElementById('statLatency').textContent = s.avg_latency_ms + ' ms';
+          document.getElementById('statChallenges').textContent = s.challenge_count;
+        }
+
+        renderLogs(data.logs || []);
+      } catch (e) {
+        console.error('Error fetching stats:', e);
+      }
+    }
+
+    function updateDocsSnippets(url) {
+      const c = document.getElementById('cursorSnippet');
+      if (c) c.textContent = `Base URL: ${url}\nAPI Key:  arena-local\nModel:    gemini-4-argon-high`;
+      const py = document.getElementById('pySnippet');
+      if (py) py.textContent = `from openai import OpenAI\n\nclient = OpenAI(\n    base_url="${url}",\n    api_key="arena-local",\n)\n\nstream = client.chat.completions.create(\n    model="gemini-4-argon-high",\n    messages=[{"role": "user", "content": "Explain relativity in one sentence"}],\n    stream=True,\n)\nfor chunk in stream:\n    if chunk.choices and chunk.choices[0].delta.content:\n        print(chunk.choices[0].delta.content, end="", flush=True)`;
+      const cu = document.getElementById('curlSnippet');
+      if (cu) cu.textContent = `curl ${url}/chat/completions \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: Bearer arena-local" \\\n  -d '{\n    "model": "kimi-k3",\n    "messages": [{"role": "user", "content": "Hello!"}],\n    "stream": false\n  }'`;
+    }
+
+    function renderLogs(logs) {
+      const tbody = document.getElementById('logsTableBody');
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-dim)">No requests recorded yet. Fire a call from Cursor, Continue, or curl to see it live!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const isOk = l.status >= 200 && l.status < 400;
+        const statusBadge = isOk 
+          ? `<span class="badge badge-ok">${l.status} OK</span>`
+          : `<span class="badge badge-err">${l.status}</span>`;
+        const chalBadge = l.challenge 
+          ? `<span class="badge badge-warn">Solved</span>`
+          : `<span style="color:var(--text-dim)">&mdash;</span>`;
+        const tokens = (l.prompt_tokens || 0) + (l.completion_tokens || 0);
+
+        return `<tr>
+          <td style="color:var(--text-muted)">${escapeHtml(l.time_str || '')}</td>
+          <td><strong>${escapeHtml(l.model || '')}</strong></td>
+          <td>${statusBadge}</td>
+          <td>${l.duration_ms} ms</td>
+          <td>${l.stream ? 'SSE' : 'JSON'}</td>
+          <td>${tokens} tok</td>
+          <td>${chalBadge}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function clearLogs() {
+      await fetch('/api/v1/logs/clear', { method: 'POST' });
+      fetchStats();
+      showToast('Logs cleared!');
+    }
+
+    async function loadModels() {
+      try {
+        const res = await fetch('/v1/models');
+        if (!res.ok) return;
+        const data = await res.json();
+        cachedModels = data.data || [];
+        document.getElementById('modelCountBadge').textContent = cachedModels.length;
+        filterModels();
+      } catch (e) {
+        console.error('Error loading models:', e);
+      }
+    }
+
+    function filterModels() {
+      const query = (document.getElementById('modelSearchInput').value || '').toLowerCase().trim();
+      const grid = document.getElementById('modelsGrid');
+      
+      const filtered = cachedModels.filter(m => {
+        if (!query) return true;
+        return (m.id || '').toLowerCase().includes(query) ||
+               (m.display_name || '').toLowerCase().includes(query) ||
+               (m.owned_by || '').toLowerCase().includes(query);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-dim)">No models match your search.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.slice(0, 120).map(m => {
+        const id = m.id;
+        const name = m.display_name || id;
+        const org = m.owned_by || 'arena.ai';
+
+        return `<div class="model-card">
+          <div class="model-card-top">
+            <span class="model-card-title" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+            <span class="model-card-org">${escapeHtml(org)}</span>
+          </div>
+          <div class="model-card-bottom">
+            <code class="model-card-id">${escapeHtml(id)}</code>
+            <button class="btn btn-secondary btn-xs" onclick="copyText('${escapeHtml(id)}', 'Model ID copied!')">Copy ID</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Auto-refresh stats every 2.5s
+    fetchStats();
+    loadModels();
+    setInterval(fetchStats, 2500);
+  </script>
+</body>
+</html>

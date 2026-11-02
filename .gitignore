@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.egg-info/
+.eggs/
+servers/
+data/
+*.pid
+.claude/
+.pytest_cache/
+.code-review-graph/
+option-a/
+option-b/
+previews/
+.venv/
